@@ -1,10 +1,9 @@
 <?php
-session_start();
-
 $message = '';
-if (isset($_POST['uploadBtn']) && $_POST['uploadBtn'] == 'Upload') {
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_FILES['uploadedFile']) && $_FILES['uploadedFile']['error'] === UPLOAD_ERR_OK) {
-        // get details of the uploaded file
+        // obtener detalles del archivo subido
         $fileTmpPath = $_FILES['uploadedFile']['tmp_name'];
         $fileName = $_FILES['uploadedFile']['name'];
         $fileSize = $_FILES['uploadedFile']['size'];
@@ -12,29 +11,27 @@ if (isset($_POST['uploadBtn']) && $_POST['uploadBtn'] == 'Upload') {
         $fileNameCmps = explode(".", $fileName);
         $fileExtension = strtolower(end($fileNameCmps));
 
-        // sanitize file-name
+        // sanitiza el nombre del archivo
         $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
 
-        // check if file has one of the following extensions
+        // Comprueba si el archivo tiene alguna de las siguientes extensiones:
         $allowedfileExtensions = array('jpg', 'gif', 'png', 'zip', 'txt', 'xls', 'doc');
-
         if (in_array($fileExtension, $allowedfileExtensions)) {
-            // directory in which the uploaded file will be moved
+            // directorio en el que se moverá el archivo subido
             $uploadFileDir = '../Vista/imagenes/';
             $dest_path = $uploadFileDir . $newFileName;
 
             if (move_uploaded_file($fileTmpPath, $dest_path)) {
-                $message = 'File is successfully uploaded.';
+                $message = 'El archivo se ha subido correctamente.';
             } else {
-                $message = 'There was some error moving the file to upload directory. Please make sure the upload directory is writable by web server.';
+                $message = 'Hubo un error al mover el archivo al directorio de carga. Por favor, asegúrese de que el directorio de carga sea escribible por el servidor web.';
             }
         } else {
-            $message = 'Upload failed. Allowed file types: ' . implode(',', $allowedfileExtensions);
+            $message = 'La carga del archivo falló. Tipos de archivo permitidos: ' . implode(',', $allowedfileExtensions);
         }
     } else {
-        $message = 'There is some error in the file upload. Please check the following error.<br>';
+        $message = 'Se ha producido un error al cargar el archivo. Por favor, revise el siguiente error.<br>';
         $message .= 'Error:' . $_FILES['uploadedFile']['error'];
     }
 }
-$_SESSION['message'] = $message;
-header("Location: ../Vista/form.php");
+header("Location: ../Vista/form.php?msg=" . urlencode($message));
